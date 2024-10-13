@@ -119,10 +119,10 @@ class VLilleHomePageState extends State<VLilleHomePage> {
                           _showClosest = true;
                           _showMap = true;
                           moveMapToStation(
-                              Provider.of<StationsProvider>(context)
+                              Provider.of<StationsProvider>(context, listen: false)
                                   .closestStation
                                   .y,
-                              Provider.of<StationsProvider>(context)
+                              Provider.of<StationsProvider>(context,listen: false)
                                   .closestStation
                                   .x
                           );
@@ -149,12 +149,12 @@ class VLilleHomePageState extends State<VLilleHomePage> {
                     },
                   ),
                 //Station selectionnée
-                if (Provider.of<StationsProvider>(context).selectedStation.name !=
+                if (Provider.of<StationsProvider>(context,listen: false).selectedStation.name !=
                   "")
                   StationWidget(
                     onClicked: (){},
                     station:
-                        Provider.of<StationsProvider>(context).selectedStation),
+                        Provider.of<StationsProvider>(context,listen: false).selectedStation),
               // Stations favorites
               if (_showFavorites &&
                   Provider.of<StationsProvider>(context).stationsfav.isNotEmpty)
@@ -634,11 +634,11 @@ class _MapWidgetState extends State<MapWidget> {
                           icon: Icon(
                             Icons.location_pin,
                             color: (station.name ==
-                                Provider.of<StationsProvider>(context)
+                                Provider.of<StationsProvider>(context, listen: false)
                                     .selectedStation
                                     .name ||
                                 station.name ==
-                                    Provider.of<StationsProvider>(context)
+                                    Provider.of<StationsProvider>(context,listen: false)
                                         .closestStation
                                         .name)
                                 ? Colors.red
