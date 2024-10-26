@@ -9,7 +9,6 @@
 - **Favorites list:** Users can add stations to a favorites list for quick access.
 - **Interactive Map:** Shows station locations on a map, with clickable markers to focus on specific stations.
 - **Real-time station information:** Displays live data such as the number of available bikes and parking spaces.
-<!-- - **Responsive design:** Works well on various screen sizes and orientations. -->
 
 ## Screenshots
 ![Home Screen](./screenshots/map-screen.png)
@@ -68,17 +67,13 @@ The app follows a clean and modular architecture with a focus on separation of c
 3. **Favorites:** Add stations to your favorites by clicking the star icon. Access the favorites list by clicking the "Favorites" button.
 4. **Closest Station:** The app automatically detects your location and displays the nearest station with real-time information.
 
-## Customization
-- **Change Theme:** To change the app's theme, modify the `ThemeData` object in the `main.dart` file.
-- **Add More Features:** You can add more functionality like filtering by availability, multi-language support, etc.
 
 ## Future Enhancements
 - Add support for user authentication to save favorites across devices.
 - Implement push notifications for station availability updates.
 - Responsive design
-- Improve performance for a large number of station markers on the map.
-
+- make the app prettier
 
 ---
 
-Made with ❤️ by [Chloé varin](https://github.com/chloclicot)
+Made by [Chloé varin](https://github.com/chloclicot)

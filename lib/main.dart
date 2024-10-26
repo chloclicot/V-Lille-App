@@ -133,7 +133,41 @@ class VLilleHomePageState extends State<VLilleHomePage> {
                       children: [Icon(Icons.star), Text("Favoris")],
                     ),
                    ),
+                  SizedBox(width: 10),
+                  // bouton station la plus proche
+                  ElevatedButton(
+                    onPressed: () {
+                      //reset la station selectionnée
+                      var proche = Provider.of<StationsProvider>(context, listen: false)
+                          .closestStation;
+                      Provider.of<StationsProvider>(context, listen: false)
+                          .selectStation(Station("", "", 0, 0, 0.0, 0.0, false));
+                      // map sur la station la plus proche
+                      moveMapToStation(proche.y,proche.x);
+                      setState(() {
+                        _showClosest = true;
+                        _showMap = true;
+                        _showFavorites = false;
+                      });
+                    },
+                    child: const Row(
+                      children: [Icon(Icons.location_pin), Text("Plus proche")],
+                    ),
+                  ),
+                  // refresh button
+                  SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        Provider.of<StationsProvider>(context, listen: false).refresh();
+                      });
+                    },
+                    child: const Row(
+                      children: [Icon(Icons.refresh), Text("Actualiser")],
+                    ),
+                  ),
                   ],
+
                 ),
                   const SizedBox(height: 20),
                   // La map
@@ -225,18 +259,13 @@ class VLilleHomePageState extends State<VLilleHomePage> {
                 const SizedBox(height: 10),
                 StationSearchBar(
                   mapController: _mapController,
-                  onClearQuery: () {
-                    setState(() {
-                      _showClosest = true;
-                    });
-                  },
-                  onSelectStation: () {
-                    setState(() {
-                      _showClosest = false;
-                      _showFavorites = false;
-                      _showMap = true;
-                    });
-                  },
+                onSelectStation: (){
+                  setState(() {
+                    _showClosest = false;
+                    _showFavorites = false;
+                    _showMap = true;
+                  });
+                },
                 ),
               ],
             ))
@@ -402,66 +431,37 @@ class FavoriteStationsWidget extends StatelessWidget {
 }
 
 
-class StationSearchBar extends StatefulWidget {
-  final Function onSelectStation;
-  final Function onClearQuery;
+class StationSearchBar extends StatefulWidget{
   final MapController mapController;
+  final Function onSelectStation;
 
-  const StationSearchBar(
-      {super.key,
-      required this.onSelectStation,
-      required this.onClearQuery,
-      required this.mapController});
+  const StationSearchBar({super.key, required this.mapController, required this.onSelectStation});
 
   @override
   State<StationSearchBar> createState() => _StationSearchBarState();
+  
 }
 
 class _StationSearchBarState extends State<StationSearchBar> {
-  String query = "";
-  final FocusNode _focusNode = FocusNode();
-  bool _hideSuggestions = true;
-  final TextEditingController _controller = TextEditingController();
-  List<String> suggestions = [];
+  List<Station> stations = [];
+  List<Station> suggestions = [];
+  SearchController searchController = SearchController();
 
-  void onQueryChange(String newQuery) {
+  // @override
+  // void initState(){
+  //   super.initState();
+  //   setState(() {
+  //     stations = Provider.of<StationsProvider>(context, listen: false).stations;
+  //     suggestions = stations;
+  //   });
+  //   print(stations);
+  //
+  // }
+
+  void getSuggestions(String query){
     setState(() {
-      query = newQuery;
-      // if(query.isEmpty){suggestions = [];}
-      suggestions = getSuggestions(query,
-          Provider.of<StationsProvider>(context, listen: false).stations);
     });
-  }
 
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus && query.isEmpty) {
-        setState(() {
-          // suggestions = [];
-        });
-      } else {
-        _hideSuggestions = false;
-        setState(() {
-          suggestions = getSuggestions(query,
-              Provider.of<StationsProvider>(context, listen: false).stations);
-        });
-      }
-    });
-  }
-
-  List<String> getSuggestions(String query, List<Station> stations) {
-    return stations
-        .where((station) =>
-            station.name.toLowerCase().contains(query.toLowerCase()))
-        .map((station) => station.name)
-        .toList();
-  }
-
-  void hideSuggestions() {
-    setState(() {
-      _hideSuggestions = true;
-    });
   }
 
   void moveMapToStation(double lat, double lon) {
@@ -470,110 +470,51 @@ class _StationSearchBarState extends State<StationSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        margin: EdgeInsets.only(
-            left: (MediaQuery.of(context).size.width - 400) / 2, top: 20),
-        child: Column(
-          children: [
-            SizedBox(
-              height: 50,
-              width: 400,
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                onChanged: onQueryChange,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: "Rechercher une station",
-                  suffixIcon: IconButton(
-                      // rechercher suggestion
-                      onPressed: () {
-                        setState(() {
-                          var station;
-                          // si la recherche correspond à une station
-                          if (Provider.of<StationsProvider>(context,
-                                  listen: false)
-                              .stations
-                              .where((station) => station.name == query)
-                              .isNotEmpty) {
-                            station = Provider.of<StationsProvider>(context,
-                                    listen: false)
-                                .stations
-                                .firstWhere((station) => station.name == query);
-                            Provider.of<StationsProvider>(context,
-                                    listen: false)
-                                .selectStation(station);
-                            moveMapToStation(station.y, station.x);
-                            widget.onSelectStation();
-                          }
-                        });
-                      },
-                      icon: const Icon(Icons.search)),
-                  prefixIcon: IconButton(
-                    onPressed: () {
-                      _controller.clear();
-                      hideSuggestions();
-                      onQueryChange("");
-                      //enlever la station selectionnée
-                      Provider.of<StationsProvider>(context, listen: false)
-                              .selectStation(Station("", "", 0, 0, 0.0, 0.0, false));
-                      var station =
-                          Provider.of<StationsProvider>(context, listen: false)
-                              .closestStation;
-                      moveMapToStation(station.y, station.x);
-                      widget.onClearQuery();
+      return Center(
+        child:Container(
+          width: MediaQuery.of(context).size.width-30,
+          child: SearchAnchor(
+              builder: (BuildContext context, SearchController controller){
+
+                return SearchBar(
+                  padding: const WidgetStatePropertyAll<EdgeInsets>(
+                      EdgeInsets.symmetric(horizontal: 16.0)),
+                  onTap: (){
+                    controller.openView();
+                    stations = Provider.of<StationsProvider>(context, listen: false).stations;
+                    suggestions = stations;
                     },
-                    icon: const Icon(Icons.clear),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-            if (!_hideSuggestions)
-              Container(
-                constraints: const BoxConstraints(
-                  maxHeight: 200,
-                ),
-                width: 400,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ListView(
-                  children: [
-                    for (var suggestion in suggestions)
-                      ListTile(
-                        title: Text(suggestion),
-                        onTap: () {
-                          _controller.text = suggestion;
-                          Station station;
-                          station = Provider.of<StationsProvider>(context,
-                                  listen: false)
-                              .stations
-                              .firstWhere(
-                                  (station) => station.name == suggestion);
-                          Provider.of<StationsProvider>(context, listen: false)
-                              .selectStation(station);
-                          setState(() {
-                            hideSuggestions();
-                            query = suggestion;
-                            suggestions = [];
-                            moveMapToStation(station.y, station.x);
-                            widget.onSelectStation();
-                          });
-                        },
-                      ),
-                  ],
-                ),
-              )
-          ],
-        ));
+                  hintText: "Rechercher une station",
+                  leading: const Icon(Icons.search),
+                );
+              },
+              suggestionsBuilder: (context,controller){
+                controller.addListener((){
+                  setState(() {
+                    suggestions = stations.where((station) => station.name.toLowerCase().contains(controller.text.toLowerCase())).toList();
+                  });
+                });
+                return List<ListTile>.generate(suggestions.length, (index) {
+                  final Station station = suggestions[index];
+                  return ListTile(
+                    title: Text(station.name),
+                    onTap: (){
+                      controller.closeView(station.name);
+                      // changer la station selectionnée
+                      Provider.of<StationsProvider>(context, listen: false)
+                          .selectStation(station);
+                      moveMapToStation(station.y, station.x);
+                      widget.onSelectStation();
+                    },
+                  );
+                });
+              }
+          ),
+        )
+      );
   }
 }
+
 
 class MapWidget extends StatefulWidget {
   final Function onPinclick;
@@ -600,11 +541,12 @@ class _MapWidgetState extends State<MapWidget> {
     }
     else{
       return Container(
-        margin: const EdgeInsets.only(top: 20),
-        height: 300,
-        width: 300,
-        decoration: const BoxDecoration(
+        margin: const EdgeInsets.only(top: 10),
+        height: 320,
+        width: MediaQuery.of(context).size.width - 20,
+        decoration: BoxDecoration(
           color: Colors.blue,
+          borderRadius: BorderRadius.all(Radius.circular(15)),
         ),
         child: Center(
             child: FlutterMap(

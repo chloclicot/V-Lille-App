@@ -72,6 +72,34 @@ class StationsProvider with ChangeNotifier, DiagnosticableTreeMixin {
     notifyListeners();
   }
 
+  void refresh(){
+    // on garde le nom de la station selectionnée
+    var selectedStationName = _selectedStation.name;
+    _getStations().then((value) {
+      _stations = value;
+      _closestStation = _stations[0];
+      for (var s in _stations) {
+        // si le nom de la station est dans la liste des stations favorites
+        if (_stationsfav.contains(s.name)) {
+          s.isFavorite = true;
+        }
+        var distance = Geolocator.distanceBetween(
+            currentLocation[0], currentLocation[1], s.y, s.x);
+        if (distance <
+            Geolocator.distanceBetween(currentLocation[0], currentLocation[1],
+                _closestStation.y, _closestStation.x)) {
+          _closestStation = s;
+        }
+        // on remet la station selectionnée refreshed
+        if (s.name == selectedStationName){
+          _selectedStation = s;
+        }
+      }
+
+      notifyListeners();
+    });
+  }
+
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
