@@ -25,7 +25,7 @@ To run the app, you'll need:
 ### Installation
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-username/vlille-finder.git
+    git clone https://github.com/chloclicot/vlille-finder.git
     cd vlille-finder
     ```
 
